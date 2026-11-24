@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Commission Split Calculator</title>
+<meta name="theme-color" content="#0f7a56">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Commission">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<style>main{padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));padding-top:max(16px,env(safe-area-inset-top));padding-bottom:max(48px,calc(env(safe-area-inset-bottom) + 32px))}</style>
+
+<style>
+:root{--bg:#fff;--paper:#f5f6f8;--text:#14171c;--muted:#5d6570;--line:#dde2e8;--accent:#0f7a56;--accent-soft:rgba(15,122,86,.12);--danger:#b42318;--ok:#0f7a56}
+@media (prefers-color-scheme:dark){:root{--bg:#111316;--paper:#1b1e23;--text:#eceef1;--muted:#9aa3ae;--line:#2d323a;--accent:#3dcea0;--accent-soft:rgba(61,206,160,.16);--danger:#ff7a6e;--ok:#3dcea0}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-text-size-adjust:100%}
+main{max-width:720px;margin:0 auto;padding:16px 16px 48px}
+h1{font-size:1.55rem;margin:6px 0 4px}h2{font-size:1.2rem;margin:28px 0 10px;padding-top:10px;border-top:1px solid var(--line)}
+p{margin:6px 0}.muted{color:var(--muted)}.small{font-size:.85rem}
+label{display:block;font-size:.85rem;color:var(--muted);margin:0 0 4px}
+input,textarea{font:inherit;font-size:16px;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px;min-height:50px;width:100%;-webkit-appearance:none;appearance:none}
+input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+textarea{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:16px;min-height:110px;resize:vertical}
+button{font:inherit;font-size:16px;min-height:50px;padding:12px 18px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);cursor:pointer;touch-action:manipulation}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+button.danger{color:var(--danger)}
+button.link{background:none;border:none;color:var(--accent);text-decoration:underline;padding:6px 0;min-height:44px;text-align:left}
+.acts{display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
+button.ed{min-height:44px;min-width:56px;padding:6px 12px;font-size:15px;color:var(--accent)}
+button.rm{min-height:44px;min-width:44px;padding:6px 10px;color:var(--danger);font-size:20px;line-height:1}
+.editbar{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px;margin-bottom:10px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--accent);font-weight:600}
+.editbar.hide{display:none!important}
+.clr{position:relative}.clr input{padding-right:52px}
+.clr .x{position:absolute;right:4px;top:50%;transform:translateY(-50%);min-height:44px;width:44px;padding:0;border:none;background:transparent;color:var(--muted);font-size:26px;line-height:1}
+.row{display:flex;flex-wrap:wrap;gap:10px;margin:10px 0}.row>*{flex:1 1 160px}
+.box{background:var(--paper);border:1px solid var(--line);border-radius:16px;padding:14px}
+.chk{display:flex;align-items:center;gap:8px;min-height:44px}.chk input{width:24px;height:24px;min-height:0;padding:0;-webkit-appearance:checkbox;appearance:auto;flex:none}
+.noscript{border:2px solid var(--danger);border-radius:12px;padding:12px 14px;margin:12px 0}
+.note{border-left:4px solid var(--accent);background:var(--paper);padding:12px 14px;border-radius:8px;margin:10px 0}
+.warn{border-left:4px solid var(--danger);background:var(--paper);padding:12px 14px;border-radius:8px;margin:10px 0;color:var(--danger);font-weight:600}
+.warn.ok{border-left-color:var(--ok);color:var(--ok);font-weight:600}
+.hide{display:none!important}
+#msg,#xlmsg{color:var(--muted);min-height:1.2em}
+.people-head{display:none;font-size:.85rem;color:var(--muted);margin:8px 0 0;font-weight:600}
+.person{display:grid;grid-template-columns:1fr auto 44px;grid-template-areas:"name name name" "pct share rm";gap:8px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}
+.person:last-child{border-bottom:none}
+.person .nm{grid-area:name}
+.person .pc{grid-area:pct;min-width:130px}
+.person .share{grid-area:share;font-variant-numeric:tabular-nums;font-size:1.15rem;font-weight:700;padding:0 6px;white-space:nowrap;min-width:6.5em;text-align:right}
+.person .rmp{grid-area:rm}
+@media(min-width:620px){
+  .people-head{display:grid;grid-template-columns:1fr 140px auto 44px;gap:8px}
+  .person{grid-template-columns:1fr 140px auto 44px;grid-template-areas:"name pct share rm";padding:10px 0}
+}
+.totals{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;margin:12px 0 4px;font-variant-numeric:tabular-nums}
+.totals b{font-size:1.15rem}
+.card{background:var(--bg);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin:10px 0}
+.card.editing{outline:2px solid var(--accent);outline-offset:1px}
+.card h3{margin:0 0 4px;font-size:1.05rem}
+.card .meta{color:var(--muted);font-size:.85rem;margin:0 0 8px}
+.plist{margin:0;padding:0;list-style:none;font-variant-numeric:tabular-nums}
+.plist li{display:flex;justify-content:space-between;gap:12px;padding:4px 0;border-bottom:1px solid var(--line)}
+.plist li:last-child{border-bottom:none}
+.plist .who{font-weight:600}
+.cpout{width:100%;min-height:5em;font:16px/1.4 ui-monospace,Menlo,monospace;white-space:pre;overflow:auto;-webkit-user-select:text;user-select:text}
+.cp{margin:8px 0}
+@media(max-width:600px){.row>button{flex:1 1 100%}}
+</style>
+</head>
+<body>
+<main>
+<noscript><div class="noscript"><b>Scripts are off in this viewer.</b> The calculator, Save, Clear, and Copy buttons need JavaScript, which this viewer (for example the Files app preview) does not run. Open this file in Safari or Chrome (Share, then Open in Safari, or save to Files and open it).</div></noscript>
+<h1>Commission Split Calculator</h1>
+<p class="muted">Enter the amount, add the people involved, and set each person’s percent. Shares update as you type and always add up to the total, to the cent.</p>
+
+<div class="box">
+<div id="editBar" class="editbar hide" role="status"><span id="editTxt"></span><button type="button" id="cancelEdit">Cancel</button></div>
+
+<div class="row">
+<div>
+<label for="inv">Invoice # or note (optional)</label>
+<div class="clr"><input id="inv" type="text" autocomplete="off" placeholder="e.g. INV-214249 or November floor"><button type="button" class="x hide" data-clear="inv" aria-label="Clear invoice or note">&times;</button></div>
+</div>
+<div>
+<label for="amt">Amount to split $</label>
+<div class="clr"><input id="amt" type="text" inputmode="decimal" autocomplete="off" placeholder="1,000.00"><button type="button" class="x hide" data-clear="amt" aria-label="Clear amount">&times;</button></div>
+</div>
+</div>
+
+<div class="people-head"><span>Name</span><span>Percent</span><span>Share</span><span></span></div>
+<div id="people"></div>
+
+<div class="totals">
+<div>Total percent: <b id="pctTotal">0%</b></div>
+<div>Total shares: <b id="shareTotal">—</b></div>
+</div>
+<div id="pctWarn" class="warn" hidden>Enter percents that add up to 100%.</div>
+
+<div class="row">
+<button type="button" id="addPerson">Add person</button>
+<button type="button" id="even">Even split</button>
+</div>
+<div class="row">
+<button type="button" class="primary" id="save">Save</button>
+<button type="button" id="cancelEdit2" class="hide">Cancel</button>
+<button type="button" id="copy">Copy for sheet</button>
+<button type="button" id="xlsx">Download to Excel</button>
+</div>
+<div class="row" id="cpopts"><label class="chk"><input type="checkbox" id="cphead"> Include header row when copying for a sheet</label></div>
+<div class="small cp" id="cpmsg"></div>
+<textarea class="cpout hide" id="cpout" readonly aria-label="Copied rows"></textarea>
+<div id="msg"></div>
+</div>
+
+<h2>Saved splits</h2>
+<div id="history"></div>
+<div class="row"><button type="button" class="danger" id="clear">Clear all</button></div>
+<div id="clearMsg" class="small" role="status"></div>
+<div id="xlmsg" class="small" role="status"></div>
+</main>
+<script>
+(function(){
+"use strict";
+var LS="amini-commission-v1";
+var SHEET_HEAD=["Invoice #","Person","Percent","Amount"];
+var nextKey=1, nextPid=1, editKey=null, undoBuf=null, lastCopy=null;
+var people=[], splits=[];
+
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
+function r2(n){n=Number(n)||0;return Math.round(+(n*100).toPrecision(12))/100;}
+function money(n){if(n==null||!isFinite(Number(n)))return "—";n=r2(n);return(n<0?"-$":"$")+Math.abs(n).toLocaleString("en-US",{minimumFractionDigits:2,maximumFractionDigits:2});}
+function num(s){var raw=String(s==null?"":s);var neg=/^\s*\(.*\)\s*$/.test(raw);var m=raw.replace(/,/g,"").match(/-?\d*\.?\d+/);if(!m)return 0;var n=parseFloat(m[0]);if(!isFinite(n))return 0;return neg?-Math.abs(n):n;}
+function parsePct(s){return num(String(s==null?"":s).replace(/%/g,""));}
+function fmtPct(n){n=Number(n)||0;var t=Math.round(n*100)/100;return (t===Math.round(t)?String(Math.round(t)):t.toFixed(2))+"%";}
+function lsGet(k){try{return window.localStorage.getItem(k);}catch(e){return null;}}
+function lsSet(k,v){try{window.localStorage.setItem(k,v);return true;}catch(e){return false;}}
+function nameGet(){try{var n=String(window.name||"");return n.indexOf("commish:")===0?n.slice(8):null;}catch(e){return null;}}
+function nameSet(v){try{window.name="commish:"+v;}catch(e){}}
+function emptyPeople(){nextPid=1;return [newPerson(), newPerson()];}
+function newPerson(name,pct){return {id:nextPid++, name:name||"", pct:pct==null||pct===""?"":String(pct)};}
+function displayName(p,i){var n=String(p.name||"").trim();return n||("Person "+(i+1));}
+
+/* Round each share to the cent, then put any leftover cents on the largest share so they add up to the total. Only when percents total 100.00%. */
+function shares(amount, percents){
+  var totalCents=Math.round(r2(amount)*100);
+  var n=percents.length;
+  var rounded=percents.map(function(p){return Math.round(totalCents*(Number(p)||0)/100);});
+  var pctSum=Math.round(percents.reduce(function(s,p){return s+(Number(p)||0);},0)*100);
+  if(pctSum!==10000) return rounded.map(function(c){return c/100;});
+  var sum=rounded.reduce(function(s,c){return s+c;},0);
+  var diff=totalCents-sum;
+  if(diff!==0&&n){
+    var idx=0;
+    for(var i=1;i<n;i++) if(rounded[i]>rounded[idx]) idx=i;
+    rounded[idx]+=diff;
+  }
+  return rounded.map(function(c){return c/100;});
+}
+function evenPercents(n){
+  if(n<1) return [];
+  var each=Math.floor(10000/n), rem=10000-each*n, out=[];
+  for(var i=0;i<n;i++) out.push((each+(i===n-1?rem:0))/100);
+  return out;
+}
+function currentPercents(){return people.map(function(p){return parsePct(p.pct);});}
+function currentAmount(){return num($("amt").value);}
+function pctSum(){return r2(currentPercents().reduce(function(s,p){return s+p;},0));}
+function currentShares(){return shares(currentAmount(), currentPercents());}
+function isHundred(){return Math.round(pctSum()*100)===10000;}
+
+function formState(){
+  return {inv:$("inv").value, amount:$("amt").value, people:people.map(function(p){return {id:p.id,name:p.name,pct:p.pct};}), nextPid:nextPid, editKey:editKey};
+}
+function saveStore(){
+  var v=JSON.stringify({splits:splits,nextKey:nextKey,draft:formState()});
+  var ok=lsSet(LS,v);nameSet(v);return ok;
+}
+function loadStore(){
+  var raw=lsGet(LS)||nameGet();
+  try{
+    var d=JSON.parse(raw||"null");
+    if(d&&Array.isArray(d.splits)){
+      splits=d.splits.filter(function(x){return x&&Array.isArray(x.people);});
+      nextKey=Math.max(d.nextKey||1, splits.reduce(function(m,x){return Math.max(m,(x.key|0)+1);},1));
+      var dr=d.draft;
+      if(dr){
+        $("inv").value=dr.inv||"";
+        $("amt").value=dr.amount||"";
+        if(Array.isArray(dr.people)&&dr.people.length){
+          people=dr.people.map(function(p){return {id:p.id||nextPid++, name:p.name||"", pct:p.pct==null?"":String(p.pct)};});
+          nextPid=Math.max(dr.nextPid||1, people.reduce(function(m,p){return Math.max(m,(p.id|0)+1);},1));
+        }
+        if(dr.editKey!=null&&splits.some(function(s){return s.key===dr.editKey;})) editKey=dr.editKey;
+      }
+      return;
+    }
+  }catch(e){}
+  splits=[];
+}
+
+function personRow(p,i){
+  var nid="name-"+p.id, pid="pct-"+p.id;
+  return '<div class="person" data-id="'+p.id+'">'+
+    '<div class="nm clr"><input id="'+nid+'" type="text" data-field="name" data-id="'+p.id+'" placeholder="'+esc("Person "+(i+1))+'" autocomplete="off" autocorrect="off" spellcheck="false" value="'+esc(p.name)+'"><button type="button" class="x'+(p.name?"":" hide")+'" data-clear="'+nid+'" aria-label="Clear name">&times;</button></div>'+
+    '<div class="pc clr"><input id="'+pid+'" type="text" inputmode="decimal" data-field="pct" data-id="'+p.id+'" placeholder="%" autocomplete="off" value="'+esc(p.pct)+'"><button type="button" class="x'+(p.pct?"":" hide")+'" data-clear="'+pid+'" aria-label="Clear percent">&times;</button></div>'+
+    '<div class="share" id="share-'+p.id+'">—</div>'+
+    '<button type="button" class="rm rmp" data-rm-person="'+p.id+'" aria-label="Remove '+esc("Person "+(i+1))+'" title="Remove person">&times;</button>'+
+  "</div>";
+}
+function renderPeople(){
+  $("people").innerHTML=people.map(personRow).join("");
+  updateLive();
+  syncX();
+  syncRemove();
+}
+function syncRemove(){
+  var disable=people.length<=2;
+  Array.prototype.forEach.call(document.querySelectorAll("[data-rm-person]"),function(b){b.disabled=disable;b.style.visibility=disable?"hidden":"visible";});
+}
+function updatePlaceholders(){
+  people.forEach(function(p,i){
+    var el=$("name-"+p.id);
+    if(el) el.placeholder="Person "+(i+1);
+  });
+}
+function updateLive(){
+  var amtVal=$("amt").value, hasAmt=/\d/.test(amtVal), amt=currentAmount(), sh=currentShares(), tot=pctSum();
+  people.forEach(function(p,i){
+    var el=$("share-"+p.id);
+    if(el) el.textContent=hasAmt?money(sh[i]):"—";
+  });
+  $("pctTotal").textContent=fmtPct(tot);
+  $("shareTotal").textContent=hasAmt?money(sh.reduce(function(s,x){return s+r2(x);},0)):"—";
+  var w=$("pctWarn");
+  if(!people.some(function(p){return String(p.pct||"").trim();})){
+    w.hidden=false;w.className="warn";w.textContent="Enter percents that add up to 100%.";
+  }else if(isHundred()){
+    w.hidden=false;w.className="warn ok";w.textContent="Percents add up to 100%.";
+  }else{
+    var diff=r2(100-tot);
+    w.hidden=false;w.className="warn";
+    w.textContent=diff>0
+      ?("Percents add up to "+fmtPct(tot)+", not 100%. Short by "+fmtPct(diff)+".")
+      :("Percents add up to "+fmtPct(tot)+", not 100%. Over by "+fmtPct(-diff)+".");
+  }
+}
+
+function setEditUI(){
+  var on=editKey!==null;
+  $("editBar").classList.toggle("hide",!on);
+  $("cancelEdit2").classList.toggle("hide",!on);
+  $("save").textContent=on?"Save changes":"Save";
+  var s=on?splits.filter(function(x){return x.key===editKey;})[0]:null;
+  $("editTxt").textContent=s?("Editing "+(s.inv&&String(s.inv).trim()?s.inv:"saved split")):"";
+  renderHistory();
+}
+
+function resetForm(){
+  editKey=null;
+  $("inv").value="";
+  $("amt").value="";
+  people=emptyPeople();
+  renderPeople();
+  setEditUI();
+  syncX();
+}
+
+function snapshot(){
+  var amt=currentAmount(), sh=currentShares(), perc=currentPercents();
+  return {
+    inv:String($("inv").value||"").trim(),
+    amount:r2(amt),
+    amountText:$("amt").value,
+    people:people.map(function(p,i){return {name:displayName(p,i), pct:r2(perc[i])};}),
+    shares:sh,
+    pctTotal:pctSum(),
+    hundred:isHundred()
+  };
+}
+
+function sheetRows(snap,head){
+  var inv=snap.inv||"";
+  var L=snap.people.map(function(p,i){return [inv,p.name,r2(p.pct),r2(snap.shares[i])];});
+  if(head) L.unshift(SHEET_HEAD.slice());
+  return L;
+}
+function sheetText(snap,head){
+  return sheetRows(snap,head).map(function(r){
+    return [r[0],r[1], typeof r[2]==="number"?String(r2(r[2])):r[2], typeof r[3]==="number"?r2(r[3]).toFixed(2):r[3]].join("\t");
+  }).join("\n");
+}
+
+function fmtWhen(iso){
+  try{
+    var d=new Date(iso);
+    if(isNaN(d.getTime())) return "";
+    return d.toLocaleString("en-US",{month:"short",day:"numeric",year:"numeric",hour:"numeric",minute:"2-digit"});
+  }catch(e){return "";}
+}
+
+function renderHistory(){
+  var el=$("history");
+  if(!splits.length){el.innerHTML='<p class="muted" id="histEmpty">No saved splits yet.</p>';return;}
+  el.innerHTML=splits.slice().reverse().map(function(s){
+    var title=s.inv||"No invoice #";
+    var warn=s.hundred===false?'<div class="warn">Percents add up to '+esc(fmtPct(s.pctTotal))+", not 100%.</div>":"";
+    var lis=s.people.map(function(p,i){return "<li><span class=\"who\">"+esc(p.name)+" · "+esc(fmtPct(p.pct))+"</span><span>"+esc(money(s.shares[i]))+"</span></li>";}).join("");
+    return '<article class="card'+(s.key===editKey?" editing":"")+'" data-key="'+s.key+'">'+
+      "<h3>"+esc(title)+"</h3>"+
+      '<p class="meta">'+esc(money(s.amount))+" · "+s.people.length+" people · "+esc(fmtWhen(s.updatedAt||s.savedAt))+"</p>"+
+      warn+'<ul class="plist">'+lis+"</ul>"+
+      '<div class="acts"><button type="button" class="ed" data-edit="'+s.key+'">Edit</button>'+
+      '<button type="button" class="rm" data-rm="'+s.key+'" aria-label="Delete split" title="Delete split">&times;</button></div></article>';
+  }).join("");
+}
+
+function startEdit(key){
+  var s=splits.filter(function(x){return x.key===key;})[0];
+  if(!s) return;
+  editKey=key;
+  $("inv").value=s.inv||"";
+  $("amt").value=s.amountText||(s.amount!=null?String(s.amount):"");
+  nextPid=1;
+  people=(s.people||[]).map(function(p){return newPerson(p.name, p.pct);});
+  if(people.length<2) people.push(newPerson());
+  renderPeople();
+  setEditUI();
+  syncX();
+  $("inv").scrollIntoView({block:"start",behavior:"smooth"});
+  $("msg").textContent="Loaded. Change whatever you need, then tap Save changes.";
+}
+function stopEdit(){
+  editKey=null;
+  setEditUI();
+  $("msg").textContent="";
+  saveStore();
+}
+function cancelEdit(){
+  stopEdit();
+  resetForm();
+  saveStore();
+  $("msg").textContent="Edit cancelled.";
+}
+
+function doSave(){
+  if(!/\d/.test($("amt").value)){ $("msg").textContent="Enter an amount to split first."; return; }
+  if(!people.some(function(p){return String(p.pct||"").trim();})){ $("msg").textContent="Enter each person’s percent first."; return; }
+  var snap=snapshot();
+  var now=new Date().toISOString();
+  if(editKey!==null){
+    var i=splits.findIndex(function(x){return x.key===editKey;});
+    if(i<0){editKey=null;}
+    else{
+      splits[i]={key:splits[i].key, inv:snap.inv, amount:snap.amount, amountText:snap.amountText, people:snap.people, shares:snap.shares, pctTotal:snap.pctTotal, hundred:snap.hundred, savedAt:splits[i].savedAt||now, updatedAt:now};
+      $("msg").textContent=snap.hundred?"Changes saved.":"Changes saved. Percents do not add up to 100%.";
+      editKey=null;
+      setEditUI();
+      renderHistory();
+      saveStore();
+      return;
+    }
+  }
+  var rec={key:nextKey++, inv:snap.inv, amount:snap.amount, amountText:snap.amountText, people:snap.people, shares:snap.shares, pctTotal:snap.pctTotal, hundred:snap.hundred, savedAt:now, updatedAt:now};
+  splits.push(rec);
+  $("msg").textContent=snap.hundred?"Saved.":"Saved. Percents do not add up to 100%.";
+  renderHistory();
+  saveStore();
+}
+
+function fallbackCopy(ta){try{ta.removeAttribute("readonly");ta.focus();ta.select();ta.setSelectionRange(0,ta.value.length);var ok=document.execCommand("copy");ta.setAttribute("readonly","");ta.blur();return ok;}catch(e){ta.setAttribute("readonly","");return false;}}
+function doCopy(snap){
+  if(!snap||!snap.people||!snap.people.length||!/\d/.test(String($("amt").value)+String(snap.amount||""))){
+    $("cpmsg").textContent="Enter an amount and percents first.";
+    return;
+  }
+  var head=$("cphead").checked, text=sheetText(snap,head), n=snap.people.length;
+  var ta=$("cpout"), m=$("cpmsg");
+  ta.value=text;ta.classList.remove("hide");ta.rows=Math.min(12,n+(head?1:0)+1);
+  var base="Copied "+n+" row"+(n===1?"":"s")+(head?" plus header":"")+". Paste into cell A1 of your sheet.";
+  var fail="Couldn't copy automatically here. Long-press the text below, choose Select All, then Copy.";
+  function done(ok){var t=ok?base:fail;m.textContent=t;lastCopy={text:text,msg:t};window.__lastCopy={text:text,ok:ok};}
+  if(navigator.clipboard&&navigator.clipboard.writeText&&window.isSecureContext!==false){
+    navigator.clipboard.writeText(text).then(function(){done(true);},function(){done(fallbackCopy(ta));});
+  }else done(fallbackCopy(ta));
+}
+
+function clearAll(){
+  if(editKey!==null) stopEdit();
+  var n=splits.length;
+  undoBuf=n?{splits:splits.slice(),nextKey:nextKey}:null;
+  splits=[];
+  saveStore();
+  renderHistory();
+  $("clearMsg").innerHTML=n?"Cleared "+n+" split"+(n===1?"":"s")+'. <button type="button" id="undoClear">Undo</button>':"Nothing to clear. The list is empty.";
+}
+
+/* ---- xlsx (STORE zip) ---- */
+function utf8(s){s=String(s);if(typeof TextEncoder!=="undefined")return new TextEncoder().encode(s);var b=unescape(encodeURIComponent(s)),u=new Uint8Array(b.length);for(var i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u;}
+var CRCT=(function(){var t=new Uint32Array(256);for(var n=0;n<256;n++){var c=n;for(var k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0;}return t;})();
+function crc32(u){var c=0xFFFFFFFF;for(var i=0;i<u.length;i++)c=CRCT[(c^u[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0;}
+function zipStore(files){var d=new Date(),dt=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate(),tm=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1);
+var parts=[],central=[],off=0;
+files.forEach(function(f){var name=utf8(f.name),data=utf8(f.data),crc=crc32(data);
+var lh=new Uint8Array(30+name.length),v=new DataView(lh.buffer);v.setUint32(0,0x04034b50,true);v.setUint16(4,20,true);v.setUint16(6,0x0800,true);v.setUint16(8,0,true);v.setUint16(10,tm,true);v.setUint16(12,dt,true);v.setUint32(14,crc,true);v.setUint32(18,data.length,true);v.setUint32(22,data.length,true);v.setUint16(26,name.length,true);v.setUint16(28,0,true);lh.set(name,30);
+var ch=new Uint8Array(46+name.length),w=new DataView(ch.buffer);w.setUint32(0,0x02014b50,true);w.setUint16(4,20,true);w.setUint16(6,20,true);w.setUint16(8,0x0800,true);w.setUint16(10,0,true);w.setUint16(12,tm,true);w.setUint16(14,dt,true);w.setUint32(16,crc,true);w.setUint32(20,data.length,true);w.setUint32(24,data.length,true);w.setUint16(28,name.length,true);w.setUint32(42,off,true);ch.set(name,46);
+parts.push(lh,data);central.push(ch);off+=lh.length+data.length;});
+var cdSize=central.reduce(function(s,c){return s+c.length;},0);var e=new Uint8Array(22),ev=new DataView(e.buffer);ev.setUint32(0,0x06054b50,true);ev.setUint16(8,files.length,true);ev.setUint16(10,files.length,true);ev.setUint32(12,cdSize,true);ev.setUint32(16,off,true);
+var all=parts.concat(central,[e]),total=all.reduce(function(s,a){return s+a.length;},0),out=new Uint8Array(total),p=0;all.forEach(function(a){out.set(a,p);p+=a.length;});return out;}
+function xe(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,"");}
+function colL(i){return String.fromCharCode(65+i);}
+function cellXML(ref,v,bold){if(v==null||v==="")return bold?'<c r="'+ref+'" s="1"/>':"";if(typeof v==="string")return'<c r="'+ref+'" t="inlineStr"'+(bold?' s="1"':"")+'><is><t xml:space="preserve">'+xe(v)+"</t></is></c>";if(typeof v==="number")v={v:v,s:0};return'<c r="'+ref+'"'+(v.s?' s="'+v.s+'"':"")+">"+(v.f?"<f>"+xe(v.f)+"</f>":"")+"<v>"+v.v+"</v></c>";}
+function sheetXML(head,rows,widths,first){var h='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetViews><sheetView'+(first?' tabSelected="1"':"")+' workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews><cols>'+widths.map(function(w,i){return'<col min="'+(i+1)+'" max="'+(i+1)+'" width="'+w+'" customWidth="1"/>';}).join("")+"</cols><sheetData>";
+h+='<row r="1">'+head.map(function(t,i){return cellXML(colL(i)+"1",t,true);}).join("")+"</row>";
+rows.forEach(function(r,ri){var R=ri+2;h+='<row r="'+R+'">'+r.map(function(v,i){return cellXML(colL(i)+R,v,r.bold&&typeof v==="string");}).join("")+"</row>";});
+return h+'</sheetData><pageMargins left="0.5" right="0.5" top="0.75" bottom="0.75" header="0.3" footer="0.3"/></worksheet>';}
+function money2(v){return{v:r2(v),s:2};}
+function pctCell(v){return{v:r2(v)/100,s:3};}
+
+function exportSnaps(){
+  var out=splits.slice();
+  var hasAmt=/\d/.test($("amt").value);
+  if(hasAmt&&people.some(function(p){return String(p.pct||"").trim();})){
+    var snap=snapshot();
+    var same=splits.some(function(s){
+      if(r2(s.amount)!==snap.amount||(s.inv||"")!==snap.inv||s.people.length!==snap.people.length) return false;
+      return s.people.every(function(p,i){return p.name===snap.people[i].name&&r2(p.pct)===r2(snap.people[i].pct);});
+    });
+    if(!same){
+      out=out.concat([{inv:snap.inv||"(current)", amount:snap.amount, people:snap.people, shares:snap.shares, pctTotal:snap.pctTotal, hundred:snap.hundred, savedAt:null, current:true}]);
+    }
+  }
+  return out;
+}
+function summaryRows(list){
+  return list.map(function(s){
+    var pcts=s.people.map(function(p){return fmtPct(p.pct).replace("%","");}).join("/");
+    return [s.inv||"", s.current?"Current (unsaved)":fmtWhen(s.updatedAt||s.savedAt), s.people.length, money2(s.amount), pcts, s.hundred===false?"Not 100%":"100%"];
+  });
+}
+function detailRows(list){
+  var rows=[];
+  list.forEach(function(s){
+    s.people.forEach(function(p,i){
+      rows.push([s.inv||"", p.name, pctCell(p.pct), money2(s.shares[i])]);
+    });
+  });
+  if(rows.length){
+    var last=rows.length+1, T=rows.length+2;
+    var tAmt=0;rows.forEach(function(r){tAmt+=r[3].v;});
+    var tot=["TOTAL","","", {f:"SUM(D2:D"+last+")",v:r2(tAmt),s:4}];
+    tot.bold=true;rows.push(tot);
+  }
+  return rows;
+}
+function buildXLSX(){
+  var list=exportSnaps();
+  var sheets=[
+    {name:"Summary",xml:sheetXML(["Invoice #","Saved","People","Amount","Percents","Status"],summaryRows(list),[22,22,10,14,18,14],true)},
+    {name:"Splits",xml:sheetXML(SHEET_HEAD,detailRows(list),[22,22,12,14])}
+  ];
+  var files=[];
+  files.push({name:"[Content_Types].xml",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>'+sheets.map(function(s,i){return'<Override PartName="/xl/worksheets/sheet'+(i+1)+'.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>';}).join("")+"</Types>"});
+  files.push({name:"_rels/.rels",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>'});
+  files.push({name:"xl/workbook.xml",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><bookViews><workbookView activeTab="0" firstSheet="0"/></bookViews><sheets>'+sheets.map(function(s,i){return'<sheet name="'+xe(s.name)+'" sheetId="'+(i+1)+'" r:id="rId'+(i+1)+'"/>';}).join("")+'</sheets><calcPr calcId="191029" fullCalcOnLoad="1"/></workbook>'});
+  files.push({name:"xl/_rels/workbook.xml.rels",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+sheets.map(function(s,i){return'<Relationship Id="rId'+(i+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet'+(i+1)+'.xml"/>';}).join("")+'<Relationship Id="rId'+(sheets.length+1)+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>'});
+  files.push({name:"xl/styles.xml",data:'<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><numFmts count="1"><numFmt numFmtId="164" formatCode="0.00%"/></numFmts><fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts><fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills><borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs><cellXfs count="5"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/><xf numFmtId="4" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/><xf numFmtId="4" fontId="1" fillId="0" borderId="0" xfId="0" applyNumberFormat="1" applyFont="1"/></cellXfs><cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>'});
+  sheets.forEach(function(s,i){files.push({name:"xl/worksheets/sheet"+(i+1)+".xml",data:s.xml});});
+  return zipStore(files);
+}
+function xlName(){var d=new Date();function z(n){return(n<10?"0":"")+n;}return"commission-"+d.getFullYear()+"-"+z(d.getMonth()+1)+"-"+z(d.getDate())+".xlsx";}
+function xlStatus(t){$("xlmsg").textContent=t;}
+function isStandalone(){try{return window.navigator.standalone===true||(window.matchMedia&&window.matchMedia("(display-mode: standalone)").matches);}catch(e){return false;}}
+function isIOS(){var u=navigator.userAgent||"";return/iP(hone|ad|od)/.test(u)||(/Macintosh/.test(u)&&navigator.maxTouchPoints>1);}
+function anchorDownload(blob,name){var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.rel="noopener";document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);if(a.parentNode)a.parentNode.removeChild(a);},4000);}
+
+function downloadXlsx(){
+  var list=exportSnaps();
+  if(!list.length){xlStatus("Add an amount and percents, or save a split first.");return;}
+  var bytes=buildXLSX(),name=xlName(),type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+  var blob=new Blob([bytes],{type:type});
+  var okMsg="Excel file ready: "+name+" (sheets: Summary, Splits).";
+  var file=null;try{file=new File([bytes],name,{type:type});}catch(e){}
+  if(file&&(isStandalone()||isIOS())&&navigator.canShare&&navigator.share&&navigator.canShare({files:[file]})){
+    navigator.share({files:[file],title:name}).then(function(){xlStatus(okMsg);},function(err){
+      if(err&&err.name==="AbortError"){xlStatus("Share cancelled. Tap Download to Excel again to save "+name+".");return;}
+      try{anchorDownload(blob,name);xlStatus(okMsg);}catch(e2){xlStatus("This viewer blocked the download. Open the page in Safari and try again.");}
+    });
+    return;
+  }
+  try{anchorDownload(blob,name);xlStatus("Downloaded "+name+" (sheets: Summary, Splits).");}
+  catch(e){xlStatus("This viewer blocked the download. Open the page in Safari or Chrome and try again.");}
+}
+
+/* ---- events: update in place, never rebuild rows while typing ---- */
+$("people").addEventListener("input",function(e){
+  var t=e.target, field=t.getAttribute("data-field"), id=+(t.getAttribute("data-id")||0);
+  if(!field||!id) return;
+  var p=people.filter(function(x){return x.id===id;})[0];
+  if(!p) return;
+  p[field]=t.value;
+  updateLive();
+  saveStore();
+});
+$("people").addEventListener("click",function(e){
+  var b=e.target.closest("[data-rm-person]");
+  if(!b||b.disabled) return;
+  var id=+b.getAttribute("data-rm-person");
+  if(people.length<=2) return;
+  people=people.filter(function(p){return p.id!==id;});
+  var row=b.closest(".person");
+  if(row&&row.parentNode) row.parentNode.removeChild(row);
+  updatePlaceholders();
+  updateLive();
+  syncRemove();
+  saveStore();
+});
+$("addPerson").addEventListener("click",function(){
+  var p=newPerson();
+  people.push(p);
+  $("people").insertAdjacentHTML("beforeend", personRow(p, people.length-1));
+  syncX();syncRemove();updateLive();saveStore();
+  var el=$("name-"+p.id);if(el) try{el.focus();}catch(e){}
+});
+$("even").addEventListener("click",function(){
+  var ev=evenPercents(people.length);
+  people.forEach(function(p,i){
+    p.pct=String(ev[i]);
+    var el=$("pct-"+p.id);
+    if(el) el.value=p.pct;
+  });
+  syncX();updateLive();saveStore();
+});
+["inv","amt"].forEach(function(id){
+  $(id).addEventListener("input",function(){updateLive();saveStore();});
+});
+$("save").addEventListener("click",doSave);
+$("cancelEdit").addEventListener("click",cancelEdit);
+$("cancelEdit2").addEventListener("click",cancelEdit);
+$("copy").addEventListener("click",function(){doCopy(snapshot());});
+$("xlsx").addEventListener("click",downloadXlsx);
+$("clear").addEventListener("click",clearAll);
+$("clearMsg").addEventListener("click",function(e){
+  if(e.target.id!=="undoClear"||!undoBuf) return;
+  splits=undoBuf.splits;nextKey=Math.max(nextKey,undoBuf.nextKey);undoBuf=null;
+  saveStore();renderHistory();$("clearMsg").textContent="Restored.";
+});
+$("history").addEventListener("click",function(e){
+  var ed=e.target.closest("[data-edit]");
+  if(ed){startEdit(+ed.getAttribute("data-edit"));return;}
+  var rm=e.target.closest("[data-rm]");
+  if(!rm) return;
+  var key=+rm.getAttribute("data-rm");
+  if(editKey===key){editKey=null;setEditUI();}
+  splits=splits.filter(function(s){return s.key!==key;});
+  saveStore();renderHistory();
+});
+$("cpout").addEventListener("focus",function(){this.select();});
+
+function syncX(){Array.prototype.forEach.call(document.querySelectorAll("[data-clear]"),function(b){var f=$(b.getAttribute("data-clear"));b.classList.toggle("hide",!(f&&f.value));});}
+document.addEventListener("input",function(e){if(e.target&&e.target.id&&document.querySelector('[data-clear="'+e.target.id+'"]'))syncX();});
+document.addEventListener("pointerdown",function(e){if(e.target.closest&&e.target.closest("[data-clear]"))e.preventDefault();});
+document.addEventListener("click",function(e){
+  var b=e.target.closest&&e.target.closest("[data-clear]");if(!b)return;
+  var id=b.getAttribute("data-clear"),f=$(id);if(!f)return;
+  f.value="";
+  var field=f.getAttribute("data-field"), pid=+(f.getAttribute("data-id")||0);
+  if(field&&pid){var p=people.filter(function(x){return x.id===pid;})[0];if(p)p[field]="";}
+  updateLive();syncX();saveStore();
+  try{f.focus();}catch(err){}
+});
+
+window.__test={
+  shares:shares, evenPercents:evenPercents, parsePct:parsePct, num:num, r2:r2,
+  sheetText:sheetText, snapshot:snapshot, buildXLSX:buildXLSX, xlName:xlName,
+  getPeople:function(){return people;}, getSplits:function(){return splits;},
+  getEditKey:function(){return editKey;}, startEdit:startEdit, clearAll:clearAll,
+  resetForm:resetForm, saveStore:saveStore, loadStore:loadStore, doSave:doSave
+};
+
+people=emptyPeople();
+loadStore();
+if(!people.length) people=emptyPeople();
+renderPeople();
+setEditUI();
+syncX();
+})();
+</script>
+<script>if("serviceWorker" in navigator&&/^https?:$/.test(location.protocol)){window.addEventListener("load",function(){navigator.serviceWorker.register("sw.js").then(function(r){window.__swReg=true;}).catch(function(e){window.__swErr=String(e);});});}</script>
+</body>
+</html>
